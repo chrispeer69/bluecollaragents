@@ -73,10 +73,12 @@ def initialize():
           id TEXT PRIMARY KEY, token_hash TEXT UNIQUE NOT NULL, label TEXT NOT NULL,
           agent_id TEXT NOT NULL, business_content TEXT NOT NULL,
           allotted_seconds INTEGER NOT NULL, used_seconds INTEGER NOT NULL DEFAULT 0,
-          active BOOLEAN NOT NULL DEFAULT TRUE, created DOUBLE PRECISION NOT NULL);
+          active BOOLEAN NOT NULL DEFAULT TRUE, created DOUBLE PRECISION NOT NULL,
+          public_token TEXT);
         ALTER TABLE revisions ALTER COLUMN saved TYPE DOUBLE PRECISION;
         ALTER TABLE sessions ALTER COLUMN expires TYPE DOUBLE PRECISION;
         ALTER TABLE attempts ALTER COLUMN at TYPE DOUBLE PRECISION;
+        ALTER TABLE demo_links ADD COLUMN IF NOT EXISTS public_token TEXT;
         """)
         for agent in seeds():
             row = c.execute("SELECT data FROM agents WHERE id=?", (agent["id"],)).fetchone()
@@ -359,8 +361,8 @@ def install_routes(app: FastAPI):
             link_id = secrets.token_hex(16)
             c.execute(
                 "INSERT INTO demo_links(id,token_hash,label,agent_id,business_content,"
-                "allotted_seconds,used_seconds,active,created) "
-                "VALUES (?,?,?,?,?,?,0,TRUE,?)",
+                "allotted_seconds,used_seconds,active,created,public_token) "
+                "VALUES (?,?,?,?,?,?,0,TRUE,?,?)",
                 (
                     link_id,
                     hashlib.sha256(token.encode()).hexdigest(),
@@ -369,6 +371,7 @@ def install_routes(app: FastAPI):
                     profile["content"],
                     body.minutes * 60,
                     time.time(),
+                    token,
                 ),
             )
         origin = request.headers.get("origin", "").rstrip("/")
@@ -379,10 +382,31 @@ def install_routes(app: FastAPI):
         authenticate(request)
         with db() as c:
             rows = c.execute(
-                "SELECT id,label,agent_id,allotted_seconds,used_seconds,active,created "
+                "SELECT id,label,agent_id,allotted_seconds,used_seconds,active,created,"
+                "public_token "
                 "FROM demo_links ORDER BY created DESC"
             ).fetchall()
-        return [dict(row) for row in rows]
+        return [
+            {
+                **dict(row),
+                "token": row["public_token"],
+                "public_token": None,
+            }
+            for row in rows
+        ]
+
+    @app.delete("/api/admin/demo-links/{link_id}")
+    def expire_demo_link(link_id: str, request: Request):
+        authenticate(request, True)
+        with db() as c:
+            result = c.execute(
+                "UPDATE demo_links SET active=FALSE WHERE id=? AND active=TRUE RETURNING id",
+                (link_id,),
+            ).fetchone()
+            if not result:
+                if not c.execute("SELECT id FROM demo_links WHERE id=?", (link_id,)).fetchone():
+                    raise HTTPException(404, "Trial link not found")
+        return {"ok": True, "id": link_id}
 
     @app.get("/api/admin/calls")
     def calls(request: Request, offset: int = 0):
@@ -410,6 +434,19 @@ def install_routes(app: FastAPI):
                 "SELECT role,text,at FROM transcripts WHERE call_id=? ORDER BY sequence", (call_id,)
             ).fetchall()
         return {**dict(row), "messages": [dict(message) for message in messages]}
+
+    @app.delete("/api/admin/calls/{call_id}")
+    def delete_call(call_id: str, request: Request):
+        authenticate(request, True)
+        with db() as c:
+            row = c.execute("SELECT status FROM calls WHERE id=?", (call_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, "Call not found")
+            if row["status"] in {"pending", "active"}:
+                raise HTTPException(409, "End the call before deleting its conversation")
+            c.execute("DELETE FROM transcripts WHERE call_id=?", (call_id,))
+            c.execute("DELETE FROM calls WHERE id=?", (call_id,))
+        return {"ok": True, "id": call_id}
 
     @app.put("/api/admin/agents/{agent_id}")
     def update(agent_id: str, body: AgentEdit, request: Request):

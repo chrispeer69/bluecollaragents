@@ -150,7 +150,7 @@ def test_logout_and_expiry(client):
     headers = login(client)
     assert client.post("/api/admin/logout", headers=headers).status_code == 200
     assert client.get("/api/admin/session").status_code == 401
-    login(client)
+    headers = login(client)
     with db() as c:
         c.execute("UPDATE sessions SET expires=?", (time.time() - 1,))
         assert c.execute("SELECT MAX(expires) AS expiry FROM sessions").fetchone()[
@@ -190,11 +190,13 @@ def test_call_history_requires_admin_and_records_transcripts(client):
     finish_call(call, "disconnected")
     assert client.get("/api/admin/calls").status_code == 401
     assert client.get("/api/admin/calls/" + call).status_code == 401
-    login(client)
+    headers = login(client)
     assert client.get("/api/admin/calls").json()[0]["reason"] == "time_limit"
     detail = client.get("/api/admin/calls/" + call).json()
     assert [m["role"] for m in detail["messages"]] == ["caller", "agent"]
     assert "client_key" not in detail
+    assert client.delete("/api/admin/calls/" + call, headers=headers).status_code == 200
+    assert client.get("/api/admin/calls/" + call).status_code == 404
 
 
 def test_business_import_is_admin_only_and_saved_for_calls(client, monkeypatch):
@@ -241,6 +243,12 @@ def test_business_import_is_admin_only_and_saved_for_calls(client, monkeypatch):
     assert public.json()["remaining_minutes"] == 12
     links = client.get("/api/admin/demo-links").json()
     assert links[0]["allotted_seconds"] == 720
+    assert links[0]["token"] == token
+    assert client.delete(
+        "/api/admin/demo-links/" + links[0]["id"], headers=headers
+    ).status_code == 200
+    assert client.get(f"/api/demos/{token}").status_code == 404
+    assert client.get("/api/admin/demo-links").json()[0]["active"] is False
 
 
 def test_business_import_rejects_private_networks():
