@@ -89,6 +89,31 @@ def business_scheduling_greeting(label: str, context: str, job_focus: str = "") 
     )
 
 
+def private_demo_greeting(mode: str, label: str, context: str, job_focus: str = "") -> str:
+    """Create a business-branded opening for every private trial category."""
+    business = label.strip() or "this business"
+    focus = " ".join(job_focus.split())
+    if mode == "scheduling":
+        return business_scheduling_greeting(business, context, focus)
+    if focus:
+        return (
+            f"You're speaking with {business}'s AI demo. This scenario focuses on {focus}. "
+            "How can I help?"
+        )
+    openings = {
+        "support": f"You're speaking with {business}'s AI support demo. How can I help today?",
+        "leads": (
+            f"You're speaking with {business}'s AI qualification demo. "
+            "What are you looking for help with?"
+        ),
+        "tow": (
+            f"You're speaking with {business}'s AI tow demo. "
+            "Let's confirm a sample request—am I speaking with Pat?"
+        ),
+    }
+    return openings.get(mode, f"You're speaking with {business}'s AI agent demo. How can I help?")
+
+
 class ConversationRecorder(FrameProcessor):
     def __init__(self, call_id, deadline, caller=False):
         super().__init__()
@@ -370,9 +395,10 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     await runner.add_workers(worker)
 
     greeting = agent["greeting"]
-    if mode == "scheduling" and business_context:
-        greeting = business_scheduling_greeting(
-            str(request_body.get("_business_label", "")), business_context, job_focus
+    business_label = str(request_body.get("_business_label", ""))
+    if business_context:
+        greeting = private_demo_greeting(
+            mode, business_label, business_context, job_focus
         )
 
     @worker.event_handler("on_pipeline_started")

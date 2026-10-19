@@ -283,7 +283,7 @@ def test_limit_and_idle_deadlines():
 
 
 def test_private_scheduling_greeting_uses_business_services():
-    from bot import business_scheduling_greeting
+    from bot import business_scheduling_greeting, private_demo_greeting
 
     greeting = business_scheduling_greeting(
         "Example Plumbing",
@@ -298,6 +298,10 @@ def test_private_scheduling_greeting_uses_business_services():
         "Example Plumbing", "Services and website sections:\n- Drain cleaning", "After-hours jobs"
     )
     assert "After-hours jobs" in focused
+    for mode in ("support", "leads", "tow"):
+        opening = private_demo_greeting(mode, "Example Plumbing", "Business facts")
+        assert "Example Plumbing" in opening
+        assert "Blue Collar Agents" not in opening
 
 
 def test_one_active_and_cooldown_are_shared_across_agents(client, monkeypatch):
