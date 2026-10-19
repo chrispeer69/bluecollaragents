@@ -130,8 +130,8 @@ def scrape_business(domain: str) -> dict:
     start_url = normalize_url(domain)
     root_host = urlparse(start_url).hostname
     pending, visited, pages = [start_url], set(), []
-    all_titles, descriptions, headings, page_copy, hours, phones, addresses = (
-        [], [], [], [], [], [], []
+    all_titles, business_names, descriptions, headings, page_copy, hours, phones, addresses = (
+        [], [], [], [], [], [], [], []
     )
 
     while pending and len(visited) < MAX_PAGES:
@@ -166,6 +166,7 @@ def scrape_business(domain: str) -> dict:
         phones.extend(page_phones)
         addresses.extend(page_addresses)
         all_titles.extend(structured_names)
+        business_names.extend(structured_names)
         page_copy.extend(structured_details)
         if len(visited) == 1:
             links = page.css("a[href]")
@@ -217,6 +218,7 @@ def scrape_business(domain: str) -> dict:
                 pass
 
     title = unique(all_titles, 3)
+    business_names = unique(business_names, 5)
     description = unique(descriptions, 5)
     services = unique(headings, 30)
     useful_copy = unique(page_copy, 45)
@@ -241,10 +243,12 @@ def scrape_business(domain: str) -> dict:
         raise HTTPException(422, "No useful business information was found on that website")
     return {
         "domain": start_url,
+        "suggested_name": business_names[0] if business_names else (title[0] if title else ""),
         "content": context,
         "pages": pages,
         "facts": {
             "titles": title,
+            "business_names": business_names,
             "descriptions": description,
             "services": services,
             "details": useful_copy,
