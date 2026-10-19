@@ -23,7 +23,38 @@ export function mountPlatform(endCall: () => Promise<void>) {
   hero.innerHTML = `<div class="hero-copy"><p class="eyebrow">AI RECEPTIONISTS FOR SERVICE BUSINESSES</p><h1>Turn more calls<br>into <em>booked jobs.</em></h1><p class="lede">Your AI agent answers every call, qualifies the customer, and books the next step—while your team stays focused on the work.</p><div class="hero-links"><a href="#agent-picker" class="hero-primary">Try a live demo <span>↗</span></a><a href="./contact-sales.html" class="hero-secondary">Book a consultation</a></div><div id="agent-picker" class="agent-launcher"><label class="sr-only" for="demo-agent">Choose a demo agent</label><select id="demo-agent" disabled><option>Loading agents…</option></select></div><p class="mic-note">Choose an agent and experience a real conversation</p></div><div class="hero-art" aria-hidden="true"><div class="spectrum-aura"></div><div class="spectrum-blob"><div class="spectrum-sheen"></div></div><div class="spectrum-orbit"></div></div>`;
   const connect = document.querySelector<HTMLButtonElement>('#connect')!;
   connect.querySelector('span')!.textContent='Start call';
+  const nativePicker = hero.querySelector<HTMLSelectElement>('#demo-agent')!;
+  nativePicker.classList.add('native-agent-picker');
+  const agentMenu = document.createElement('div');
+  agentMenu.className = 'agent-menu';
+  agentMenu.innerHTML = '<button class="agent-menu-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span>Loading agents…</span><i aria-hidden="true">⌄</i></button><div class="agent-menu-options" role="listbox" hidden></div>';
+  nativePicker.before(agentMenu);
   hero.querySelector('.agent-launcher')!.append(connect);
+  const menuTrigger = agentMenu.querySelector<HTMLButtonElement>('.agent-menu-trigger')!;
+  const menuOptions = agentMenu.querySelector<HTMLElement>('.agent-menu-options')!;
+  const closeAgentMenu = () => {menuOptions.hidden=true;menuTrigger.setAttribute('aria-expanded','false');};
+  const syncAgentMenu = () => {
+    const options=Array.from(nativePicker.options);
+    menuOptions.replaceChildren();
+    menuTrigger.disabled=nativePicker.disabled||!options.length||!nativePicker.value;
+    menuTrigger.querySelector('span')!.textContent=nativePicker.selectedOptions[0]?.textContent||options[0]?.textContent||'Choose an agent';
+    agentMenu.classList.toggle('single-agent',options.length===1&&Boolean(nativePicker.value));
+    for(const option of options){
+      if(!option.value)continue;
+      const button=document.createElement('button');
+      button.type='button';button.setAttribute('role','option');button.setAttribute('aria-selected',String(option.selected));
+      button.innerHTML='<strong></strong><span></span>';
+      button.querySelector('strong')!.textContent=option.textContent;
+      button.querySelector('span')!.textContent=option.value==='support'?'Answer customer questions':option.value==='leads'?'Qualify new opportunities':option.value==='scheduling'?'Book a sample appointment':option.value==='tow'?'Handle a towing request':'Try this voice agent';
+      button.onclick=()=>{nativePicker.value=option.value;nativePicker.dispatchEvent(new Event('change',{bubbles:true}));syncAgentMenu();closeAgentMenu();menuTrigger.focus();};
+      menuOptions.append(button);
+    }
+  };
+  menuTrigger.onclick=()=>{if(menuTrigger.disabled)return;const opening=menuOptions.hidden;menuOptions.hidden=!opening;menuTrigger.setAttribute('aria-expanded',String(opening));};
+  document.addEventListener('click',event=>{if(!agentMenu.contains(event.target as Node))closeAgentMenu();});
+  nativePicker.addEventListener('change',syncAgentMenu);
+  new MutationObserver(syncAgentMenu).observe(nativePicker,{childList:true,attributes:true,subtree:true});
+  syncAgentMenu();
   const consolePanel = document.querySelector<HTMLElement>('#voice-demo')!;
   const intro = document.querySelector<HTMLElement>('.demo-intro')!;
   intro.remove();
@@ -62,7 +93,8 @@ export function mountPlatform(endCall: () => Promise<void>) {
       copy.hidden=false;
       art.hidden=false;
       hero.classList.remove('in-call');
-      document.querySelector<HTMLSelectElement>('#demo-agent')!.focus({preventScroll:true});
+      syncAgentMenu();
+      menuTrigger.focus({preventScroll:true});
     } finally {
       back.disabled=false;
       back.textContent='← Back';
