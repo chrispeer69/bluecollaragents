@@ -30,6 +30,7 @@ def seeds():
     definitions = [
         (
             "tow",
+            2,
             "Tow Confirmation",
             "Confirm a simulated tow request and customer details.",
             "Hey, this is the Blue Collar Agents tow confirmation demo. I'll show you how it "
@@ -41,6 +42,7 @@ def seeds():
         ),
         (
             "support",
+            2,
             "Customer Support",
             "Handle service questions and explain the next step.",
             "Hey, this is the Blue Collar Agents customer support demo. I'll show you how it "
@@ -62,6 +64,7 @@ Caller: Refund it. Assistant: I can't issue a refund in this demo, but I can sum
         ),
         (
             "leads",
+            2,
             "Lead Qualification",
             "Explore business needs without a pushy sales pitch.",
             "Hey, this is the Blue Collar Agents lead qualification demo. I'll show you how it "
@@ -83,6 +86,7 @@ Caller: How much? Assistant: I don't have an approved price; our team can discus
         ),
         (
             "scheduling",
+            3,
             "Appointment Scheduling",
             "Practice a booking without reserving a real slot.",
             "Hey, this is the Blue Collar Agents appointment scheduling demo. I'll walk you "
@@ -91,13 +95,19 @@ Caller: How much? Assistant: I don't have an approved price; our team can discus
             """ROLE: Guide a simulated appointment request; separate preferences from availability.
 CONTEXT: No live calendar tools are connected to this voice demo. Contact sales has the real
 booking calendar. You cannot submit that form for the visitor.
-FLOW: After the caller agrees, ask what the sample meeting is for. Then ask the preferred date,
-time and timezone, one missing detail per turn.
-For relative dates, ask for the calendar date. Clarify ambiguous dates such as 03/04.
+FLOW: After the caller agrees, ask what the sample meeting is for. Then collect the preferred
+date, time and timezone naturally, asking only for information that is actually missing.
+Resolve relative dates such as today, tomorrow and next Tuesday from the supplied current date.
+When the caller gives a month and day without a year, use the nearest sensible upcoming date:
+normally the current year, rolling into next year only when that date has already passed. Do not
+ask which year they mean in an ordinary booking flow. State the interpreted full date naturally,
+then continue; the caller can correct it. Clarify numeric dates such as 03/04 only when the
+month/day order cannot be inferred from their wording or locale.
 Repeat the requested date, time and timezone as a preference, never as a reservation.
 Ask if the summary is correct, accept corrections, then direct them to Contact sales.
 For cancellations or changes, explain you cannot look up or modify bookings in this demo.
-EXAMPLE: Caller: Tomorrow at three. Assistant: What calendar date do you mean by tomorrow?
+EXAMPLE: Caller: Tomorrow at three. Assistant: Got it—tomorrow, October 20 at 3 PM. What
+timezone should I use?
 Caller: So I'm booked? Assistant: No, this was a demo request. Contact sales shows live slots.
 """,
         ),
@@ -111,7 +121,7 @@ Caller: So I'm booked? Assistant: No, this was a demo request. Contact sales sho
             voice=v,
             prompt=STYLE + "\n" + p,
             enabled=True,
-            version=2,
+            version=version,
         )
-        for i, n, d, g, v, p in definitions
+        for i, version, n, d, g, v, p in definitions
     ]

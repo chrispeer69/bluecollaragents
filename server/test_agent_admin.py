@@ -61,6 +61,13 @@ def test_catalog_hides_scripts(client):
     assert client.get("/api/admin/agents").status_code == 401
 
 
+def test_scheduling_uses_nearest_upcoming_date(client):
+    scheduling = get_agent("scheduling")
+    assert scheduling["version"] == 3
+    assert "ask which year" in scheduling["prompt"]
+    assert "nearest sensible upcoming date" in scheduling["prompt"]
+
+
 def test_first_admin_can_be_created_once(monkeypatch):
     reset_test_database(monkeypatch)
     monkeypatch.setenv("ADMIN_COOKIE_SECURE", "false")

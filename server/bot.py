@@ -3,6 +3,7 @@ import contextlib
 import os
 import time
 import uuid
+from datetime import UTC, datetime
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -270,6 +271,10 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         if business_context
         else ""
     )
+    current_date_instruction = (
+        f"\nCURRENT DATE: {datetime.now(UTC).date().isoformat()} (UTC). "
+        "Use the caller's stated timezone when resolving local relative dates.\n"
+    )
     logger.info(f"Using test voice: {voice}")
     if voice.startswith("flux-"):
         tts = DeepgramFluxTTSService(
@@ -285,7 +290,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         api_key=os.environ["ANTHROPIC_API_KEY"],
         settings=AnthropicLLMService.Settings(
             model=model,
-            system_instruction=SAFETY + "\n" + agent["prompt"] + business_instruction,
+            system_instruction=(
+                SAFETY + current_date_instruction + "\n" + agent["prompt"] + business_instruction
+            ),
         ),
     )
 
