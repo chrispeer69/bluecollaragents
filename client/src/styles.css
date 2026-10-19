@@ -13,7 +13,8 @@ button { font: inherit; }
 .shell { width: min(1240px, calc(100% - 40px)); margin: 0 auto; padding-bottom: 64px; }
 .topbar { height: 90px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d8d4ca; }
 .brand { display: flex; align-items: center; gap: 13px; }
-.brand-mark { width: 40px; height: 40px; border-radius: 9px; display: grid; place-items: center; background: #e95b36; color: #fff; font: 800 13px/1 Manrope; letter-spacing: -.04em; }
+.brand-mark { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; background: transparent; }
+.brand-mark svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 7px 14px #4e356f24); }
 .brand strong, .brand span { display: block; }
 .brand strong { font: 700 15px Manrope; letter-spacing: -.02em; }
 .brand span { color: #6b777d; font-size: 12px; margin-top: 2px; }
