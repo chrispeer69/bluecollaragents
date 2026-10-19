@@ -58,7 +58,8 @@ let startRequest:AbortController|undefined;
 let leavingCall=false;
 let serverEndMessage="";
 let activeAgentName="Voice assistant";
-const demoToken=new URLSearchParams(location.search).get('demo');
+const rawDemoToken=new URLSearchParams(location.search).get('demo');
+const demoToken=rawDemoToken?.replace(/\/+$/,'')||null;
 let demoMaxSeconds=900;
 let userRequestedDisconnect=false, callFailure="", agentHasSpoken=false;
 let startedAt=0, timerHandle:number|undefined, messages=0, muted=false, partialAgentMessage:HTMLDivElement|null=null, partialCallerMessage:HTMLDivElement|null=null, callerChars=0, agentChars=0, callerTurns=0, waitingSince=0, latencyTotal=0, latencySamples=0, verdict="Not scored";
@@ -174,7 +175,7 @@ async function loadAgentCatalog(){
   if(!response.ok)throw new Error('Agent catalog unavailable');
   const payload=await response.json();
   const agents:Array<{id:string;name:string}>=demoToken?[payload.agent]:payload;
-  if(demoToken){demoMaxSeconds=Math.max(60,Number(payload.remaining_minutes||1)*60);document.querySelector<HTMLElement>('.hero .eyebrow')!.textContent=payload.label;document.querySelector<HTMLElement>('.mic-note')!.textContent=`${payload.remaining_minutes} trial minutes remaining · Transcript saved for review`;}
+  if(demoToken){demoMaxSeconds=Math.max(60,Number(payload.remaining_minutes||1)*60);document.body.classList.add('private-demo');document.querySelector<HTMLElement>('.hero .eyebrow')!.textContent='PRIVATE VOICE AGENT TRIAL';document.querySelector<HTMLElement>('.hero h1')!.textContent=`Try ${payload.label}'s AI agent.`;document.querySelector<HTMLElement>('.hero .lede')!.textContent=`This private demo is configured for ${payload.label}. Start the call and speak naturally to experience the assigned agent.`;document.querySelector<HTMLElement>('.hero-links')!.hidden=true;document.querySelector<HTMLElement>('.mic-note')!.textContent=`${payload.remaining_minutes} trial minutes remaining · Transcript saved for review`;}
   const picker=byId<HTMLSelectElement>('demo-agent');picker.replaceChildren();
   for(const agent of agents){const option=document.createElement('option');option.value=agent.id;option.textContent=agent.name;picker.append(option);}
   picker.disabled=!agents.length;connectButton.disabled=!agents.length;
@@ -186,7 +187,7 @@ async function loadAgentCatalog(){
   picker.disabled=true;
   connectButton.disabled=true;
   setStatus('Agent catalog unavailable','error');
-  setActivity('Start the backend, then refresh this page.');
+  if(demoToken){document.body.classList.add('private-demo');document.querySelector<HTMLElement>('.hero .eyebrow')!.textContent='PRIVATE TRIAL UNAVAILABLE';document.querySelector<HTMLElement>('.hero h1')!.textContent='This trial link is unavailable.';document.querySelector<HTMLElement>('.hero .lede')!.textContent='The link may have expired or used its allotted minutes. Contact the person who shared it for a new trial.';document.querySelector<HTMLElement>('.hero-links')!.hidden=true;setActivity('Ask the sender for a new private trial link.');}else setActivity('Start the backend, then refresh this page.');
  }
 }
 void loadAgentCatalog();

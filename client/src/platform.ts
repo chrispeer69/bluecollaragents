@@ -1,17 +1,19 @@
 import './platform.css';
 
 export function mountPlatform(endCall: () => Promise<void>) {
+  const privateTrial = new URLSearchParams(location.search).has('demo');
   const shell = document.querySelector<HTMLElement>('.shell')!;
   const header = shell.querySelector<HTMLElement>('.topbar')!;
   const banner = document.createElement('div');
   banner.className = 'platform-banner';
-  banner.innerHTML = 'Meet your next voice agent. <a href="#agent-demo">Try a live demo <span aria-hidden="true">↗</span></a>';
+  banner.innerHTML = privateTrial ? 'Private voice agent trial' : 'Meet your next voice agent. <a href="#agent-demo">Try a live demo <span aria-hidden="true">↗</span></a>';
   header.before(banner);
   const nav = document.createElement('nav');
   nav.className = 'platform-nav';
   nav.setAttribute('aria-label','Main navigation');
   nav.innerHTML = `<details><summary>Solutions <span>⌄</span></summary><div class="nav-menu"><a href="#solutions">Roadside & towing <small>Keep customers informed</small></a><a href="#solutions">Home services <small>Make the next conversation count</small></a><a href="#solutions">Sales & scheduling <small>Turn interest into a next step</small></a></div></details><details><summary>Platform <span>⌄</span></summary><div class="nav-menu"><a href="#agent-demo">Voice agents <small>Choose an agent and try a call</small></a><a href="#voice-demo" data-open-demo>Live conversations <small>Follow along with the transcript</small></a><a href="./contact-sales.html">Booking <small>Find a time to meet our team</small></a></div></details><a href="#solutions">Use cases</a><details><summary>Resources <span>⌄</span></summary><div class="nav-menu"><a href="#how-it-works">How it works <small>From first hello to the next step</small></a><a href="./contact-sales.html">Talk to our team <small>Discuss your business needs</small></a></div></details>`;
   header.querySelector('.brand')!.after(nav);
+  nav.hidden = privateTrial;
   const menus = Array.from(nav.querySelectorAll('details'));
   menus.forEach(menu=>menu.addEventListener('toggle',()=>{if(menu.open)menus.forEach(other=>{if(other!==menu)other.open=false;});}));
   document.addEventListener('click',event=>{if(!nav.contains(event.target as Node))menus.forEach(menu=>menu.open=false);});
@@ -106,11 +108,12 @@ export function mountPlatform(endCall: () => Promise<void>) {
   });
   header.querySelector('.header-actions>a')!.setAttribute('href','#agent-demo');
   header.querySelector('.header-actions>a')!.textContent='Try an agent';
+  if(privateTrial) (header.querySelector('.header-actions>a') as HTMLElement).hidden=true;
 
   const info = document.createElement('section');
   info.className='platform-content';
   info.innerHTML=`<div class="section-heading" id="solutions"><p>ONE PLATFORM. DIFFERENT CONVERSATIONS.</p><h2>A voice for every<br>part of your business.</h2></div><div class="use-cases"><article><span class="case-number">01 / OPERATIONS</span><h3>Keep the job moving.</h3><p>Hear the tow agent confirm tow details in a live simulated customer call.</p><a href="#agent-demo">Try the tow agent <span>↗</span></a></article><article><span class="case-number">02 / CUSTOMER EXPERIENCE</span><h3>Be there for the next call.</h3><p>Explore a voice agent for customer questions and service enquiries.</p><a href="./contact-sales.html">Discuss your agent <span>↗</span></a></article><article><span class="case-number">03 / GROWTH</span><h3>Give every lead a next step.</h3><p>Plan an agent for qualification, follow-ups, and appointment scheduling.</p><a href="./contact-sales.html">Talk to sales <span>↗</span></a></article></div><div class="how-it-works" id="how-it-works"><div><p>HEAR IT FOR YOURSELF</p><h2>Less imagining.<br>More conversation.</h2></div><ol><li><strong>Choose your agent.</strong><span>Choose support, qualification, scheduling, or tow confirmation.</span></li><li><strong>Start talking.</strong><span>Allow your microphone and respond naturally.</span></li><li><strong>See it happen.</strong><span>Watch the voice animation and follow the live transcript.</span></li></ol></div>`;
-  shell.querySelector('.experience-footer')!.before(info);
+  if(!privateTrial) shell.querySelector('.experience-footer')!.before(info);
   // Keep the internal metrics/settings nodes mounted because the live-call
   // callbacks update them. CSS hides the container from the customer view.
 }
