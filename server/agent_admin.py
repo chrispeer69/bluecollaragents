@@ -74,11 +74,12 @@ def initialize():
           agent_id TEXT NOT NULL, business_content TEXT NOT NULL,
           allotted_seconds INTEGER NOT NULL, used_seconds INTEGER NOT NULL DEFAULT 0,
           active BOOLEAN NOT NULL DEFAULT TRUE, created DOUBLE PRECISION NOT NULL,
-          public_token TEXT);
+          public_token TEXT, job_focus TEXT);
         ALTER TABLE revisions ALTER COLUMN saved TYPE DOUBLE PRECISION;
         ALTER TABLE sessions ALTER COLUMN expires TYPE DOUBLE PRECISION;
         ALTER TABLE attempts ALTER COLUMN at TYPE DOUBLE PRECISION;
         ALTER TABLE demo_links ADD COLUMN IF NOT EXISTS public_token TEXT;
+        ALTER TABLE demo_links ADD COLUMN IF NOT EXISTS job_focus TEXT;
         """)
         for agent in seeds():
             row = c.execute("SELECT data FROM agents WHERE id=?", (agent["id"],)).fetchone()
@@ -119,7 +120,8 @@ def resolve_demo_link(token: str):
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     with db() as c:
         row = c.execute(
-            "SELECT id,label,agent_id,business_content,allotted_seconds,used_seconds,active "
+            "SELECT id,label,agent_id,business_content,allotted_seconds,used_seconds,active,"
+            "job_focus "
             "FROM demo_links WHERE token_hash=?", (token_hash,)
         ).fetchone()
     if not row or not row["active"]:
@@ -176,6 +178,7 @@ class DemoLinkCreate(BaseModel):
     label: str = Field(min_length=1, max_length=120)
     agent_id: str = Field(min_length=1, max_length=80)
     minutes: int = Field(ge=1, le=120)
+    job_focus: str = Field(default="", max_length=500)
 
 
 def origin_check(request):
@@ -361,8 +364,8 @@ def install_routes(app: FastAPI):
             link_id = secrets.token_hex(16)
             c.execute(
                 "INSERT INTO demo_links(id,token_hash,label,agent_id,business_content,"
-                "allotted_seconds,used_seconds,active,created,public_token) "
-                "VALUES (?,?,?,?,?,?,0,TRUE,?,?)",
+                "allotted_seconds,used_seconds,active,created,public_token,job_focus) "
+                "VALUES (?,?,?,?,?,?,0,TRUE,?,?,?)",
                 (
                     link_id,
                     hashlib.sha256(token.encode()).hexdigest(),
@@ -372,6 +375,7 @@ def install_routes(app: FastAPI):
                     body.minutes * 60,
                     time.time(),
                     token,
+                    body.job_focus.strip(),
                 ),
             )
         origin = request.headers.get("origin", "").rstrip("/")
@@ -383,7 +387,7 @@ def install_routes(app: FastAPI):
         with db() as c:
             rows = c.execute(
                 "SELECT id,label,agent_id,allotted_seconds,used_seconds,active,created,"
-                "public_token "
+                "public_token,job_focus "
                 "FROM demo_links ORDER BY created DESC"
             ).fetchall()
         return [

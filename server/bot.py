@@ -54,7 +54,7 @@ load_dotenv()
 SAFE_TEST_MODE = os.getenv("SAFE_TEST_MODE", "true").lower() != "false"
 
 
-def business_scheduling_greeting(label: str, context: str) -> str:
+def business_scheduling_greeting(label: str, context: str, job_focus: str = "") -> str:
     """Open a private scheduling trial with the customer's own business context."""
     services = []
     in_services = False
@@ -72,6 +72,11 @@ def business_scheduling_greeting(label: str, context: str) -> str:
         if len(services) == 3:
             break
     business = label.strip() or "this business"
+    if job_focus.strip():
+        return (
+            f"You're speaking with the {business} AI scheduling demo. This demo is configured "
+            f"to help with {job_focus.strip()}. What can I help you schedule?"
+        )
     if services:
         choices = ", ".join(services)
         return (
@@ -301,6 +306,13 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         if business_context
         else ""
     )
+    job_focus = str(request_body.get("_job_focus", "")).strip()
+    if job_focus:
+        business_instruction += (
+            "\nDEMO JOB FOCUS (configured by the administrator):\n"
+            f"Use this as the main scenario and desired outcome: {job_focus}\n"
+            "Stay within the supplied website facts and do not invent business capabilities.\n"
+        )
     current_date_instruction = (
         f"\nCURRENT DATE: {datetime.now(UTC).date().isoformat()} (UTC). "
         "Use the caller's stated timezone when resolving local relative dates.\n"
@@ -360,7 +372,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     greeting = agent["greeting"]
     if mode == "scheduling" and business_context:
         greeting = business_scheduling_greeting(
-            str(request_body.get("_business_label", "")), business_context
+            str(request_body.get("_business_label", "")), business_context, job_focus
         )
 
     @worker.event_handler("on_pipeline_started")
@@ -482,6 +494,7 @@ if __name__ == "__main__":
             "_agent_snapshot": agent,
             "_business_context": demo["business_content"] if demo else "",
             "_business_label": demo["label"] if demo else "",
+            "_job_focus": demo["job_focus"] if demo else "",
             "_max_seconds": min(MAX_SECONDS, demo["remaining_seconds"]) if demo else MAX_SECONDS,
             "_created": now,
         }

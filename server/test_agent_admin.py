@@ -235,7 +235,12 @@ def test_business_import_is_admin_only_and_saved_for_calls(client, monkeypatch):
     created = client.post(
         "/api/admin/demo-links",
         headers=headers,
-        json={"label": "Example Plumbing", "agent_id": "scheduling", "minutes": 12},
+        json={
+            "label": "Example Plumbing",
+            "agent_id": "scheduling",
+            "minutes": 12,
+            "job_focus": "Book drain-cleaning calls",
+        },
     )
     assert created.status_code == 200
     token = parse_qs(urlparse(created.json()["url"]).query)["demo"][0]
@@ -244,6 +249,7 @@ def test_business_import_is_admin_only_and_saved_for_calls(client, monkeypatch):
     assert public.json()["remaining_minutes"] == 12
     links = client.get("/api/admin/demo-links").json()
     assert links[0]["allotted_seconds"] == 720
+    assert links[0]["job_focus"] == "Book drain-cleaning calls"
     assert links[0]["token"] == token
     assert client.delete(
         "/api/admin/demo-links/" + links[0]["id"], headers=headers
@@ -288,6 +294,10 @@ def test_private_scheduling_greeting_uses_business_services():
     assert "Drain cleaning" in greeting
     assert "Water heater repair" in greeting
     assert "what would you like to book" not in greeting.lower()
+    focused = business_scheduling_greeting(
+        "Example Plumbing", "Services and website sections:\n- Drain cleaning", "After-hours jobs"
+    )
+    assert "After-hours jobs" in focused
 
 
 def test_one_active_and_cooldown_are_shared_across_agents(client, monkeypatch):
