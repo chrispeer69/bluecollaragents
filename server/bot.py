@@ -54,6 +54,36 @@ load_dotenv()
 SAFE_TEST_MODE = os.getenv("SAFE_TEST_MODE", "true").lower() != "false"
 
 
+def business_scheduling_greeting(label: str, context: str) -> str:
+    """Open a private scheduling trial with the customer's own business context."""
+    services = []
+    in_services = False
+    for raw_line in context.splitlines():
+        line = raw_line.strip()
+        if line == "Services and website sections:":
+            in_services = True
+            continue
+        if in_services and line.endswith(":"):
+            break
+        if in_services and line.startswith("- "):
+            value = line[2:].strip()
+            if value and len(value) <= 80:
+                services.append(value)
+        if len(services) == 3:
+            break
+    business = label.strip() or "this business"
+    if services:
+        choices = ", ".join(services)
+        return (
+            f"You're speaking with the {business} AI scheduling demo. Their website lists "
+            f"{choices}. Which of those services can I help you schedule?"
+        )
+    return (
+        f"You're speaking with the {business} AI scheduling demo. Which of their services "
+        "can I help you schedule?"
+    )
+
+
 class ConversationRecorder(FrameProcessor):
     def __init__(self, call_id, deadline, caller=False):
         super().__init__()
@@ -328,6 +358,10 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     await runner.add_workers(worker)
 
     greeting = agent["greeting"]
+    if mode == "scheduling" and business_context:
+        greeting = business_scheduling_greeting(
+            str(request_body.get("_business_label", "")), business_context
+        )
 
     @worker.event_handler("on_pipeline_started")
     async def on_pipeline_started(_worker, _frame):
@@ -447,6 +481,7 @@ if __name__ == "__main__":
         lab_sessions[session_id] = {
             "_agent_snapshot": agent,
             "_business_context": demo["business_content"] if demo else "",
+            "_business_label": demo["label"] if demo else "",
             "_max_seconds": min(MAX_SECONDS, demo["remaining_seconds"]) if demo else MAX_SECONDS,
             "_created": now,
         }

@@ -1,6 +1,23 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+const adminLoginRoute = (): Plugin => ({
+  name: "admin-login-route",
+  configureServer(server) {
+    server.middlewares.use((req, _res, next) => {
+      if (req.url === "/admin-login") req.url = "/admin-login/";
+      next();
+    });
+  },
+  configurePreviewServer(server) {
+    server.middlewares.use((req, _res, next) => {
+      if (req.url === "/admin-login") req.url = "/admin-login/";
+      next();
+    });
+  },
+});
 
 export default defineConfig({
+  plugins: [adminLoginRoute()],
   build: {
     rollupOptions: {
       input: {

@@ -63,7 +63,7 @@ def test_catalog_hides_scripts(client):
 
 def test_scheduling_uses_nearest_upcoming_date(client):
     scheduling = get_agent("scheduling")
-    assert scheduling["version"] == 4
+    assert scheduling["version"] == 5
     assert "ask which year" in scheduling["prompt"]
     assert "nearest sensible upcoming date" in scheduling["prompt"]
 
@@ -274,6 +274,20 @@ def test_limit_and_idle_deadlines():
     assert idle.check(89) is None
     assert idle.check(90) == "idle_timeout"
     assert idle.closes_at == 100
+
+
+def test_private_scheduling_greeting_uses_business_services():
+    from bot import business_scheduling_greeting
+
+    greeting = business_scheduling_greeting(
+        "Example Plumbing",
+        "Business:\n- Example Plumbing\nServices and website sections:\n"
+        "- Drain cleaning\n- Water heater repair\nBusiness hours:\n- Monday to Friday",
+    )
+    assert "Example Plumbing" in greeting
+    assert "Drain cleaning" in greeting
+    assert "Water heater repair" in greeting
+    assert "what would you like to book" not in greeting.lower()
 
 
 def test_one_active_and_cooldown_are_shared_across_agents(client, monkeypatch):

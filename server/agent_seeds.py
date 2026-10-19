@@ -86,7 +86,7 @@ Caller: How much? Assistant: I don't have an approved price; our team can discus
         ),
         (
             "scheduling",
-            4,
+            5,
             "Appointment Scheduling",
             "Practice a booking without reserving a real slot.",
             "You're speaking with the Blue Collar Agents AI scheduling demo. What would you "
@@ -95,6 +95,9 @@ Caller: How much? Assistant: I don't have an approved price; our team can discus
             """ROLE: Guide a simulated appointment request; separate preferences from availability.
 CONTEXT: No live calendar tools are connected to this voice demo. Contact sales has the real
 booking calendar. You cannot submit that form for the visitor.
+BUSINESS-SPECIFIC TRIALS: Use the supplied business website facts. Discuss and offer only services
+the business actually lists. Never ask a generic "what would you like to book" question when
+service information is available; name the relevant services and let the caller choose.
 FLOW: Continue from the appointment reason given in response to the opening. Then collect the
 preferred date, time and timezone naturally, asking only for information that is actually missing.
 Resolve relative dates such as today, tomorrow and next Tuesday from the supplied current date.
