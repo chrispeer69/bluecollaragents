@@ -80,10 +80,20 @@ def test_first_admin_can_be_created_once(monkeypatch):
             "needs_setup": True,
             "setup_available": True,
         }
+        too_short = setup_client.post(
+            "/api/admin/setup",
+            headers=ORIGIN,
+            json={
+                "username": "owner",
+                "password": "seven77",
+                "setup_token": "one-time-test-token",
+            },
+        )
+        assert too_short.status_code == 422
         bad = setup_client.post(
             "/api/admin/setup",
             headers=ORIGIN,
-            json={"username": "owner", "password": "long-test-password", "setup_token": "bad"},
+            json={"username": "owner", "password": "eight888", "setup_token": "bad"},
         )
         assert bad.status_code == 403
         created = setup_client.post(
@@ -91,7 +101,7 @@ def test_first_admin_can_be_created_once(monkeypatch):
             headers=ORIGIN,
             json={
                 "username": "owner",
-                "password": "long-test-password",
+                "password": "eight888",
                 "setup_token": "one-time-test-token",
             },
         )
@@ -103,7 +113,7 @@ def test_first_admin_can_be_created_once(monkeypatch):
             headers=ORIGIN,
             json={
                 "username": "second",
-                "password": "long-test-password",
+                "password": "eight888",
                 "setup_token": "one-time-test-token",
             },
         )

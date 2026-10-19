@@ -142,7 +142,7 @@ class Login(BaseModel):
 
 class Setup(BaseModel):
     username: str = Field(min_length=1, max_length=100)
-    password: str = Field(min_length=12, max_length=256)
+    password: str = Field(min_length=8, max_length=256)
     setup_token: str = Field(min_length=1, max_length=512)
 
 
@@ -440,10 +440,10 @@ if __name__ == "__main__":
     load_dotenv(Path(__file__).parent / ".env")
     initialize()
     username = input("Admin username: ").strip()
-    password = getpass.getpass("New password (at least 12 characters): ")
+    password = getpass.getpass("New password (at least 8 characters): ")
     confirmation = getpass.getpass("Confirm password: ")
-    if not username or len(username) > 100 or not 12 <= len(password) <= 256:
-        raise SystemExit("Use a username and a password of 12–256 characters.")
+    if not username or len(username) > 100 or not 8 <= len(password) <= 256:
+        raise SystemExit("Use a username and a password of 8–256 characters.")
     if password != confirmation:
         raise SystemExit("Passwords did not match.")
     with db() as conn:
