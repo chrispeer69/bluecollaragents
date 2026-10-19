@@ -175,7 +175,7 @@ class BusinessProfile(BaseModel):
 
 class DemoLinkCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    label: str = Field(min_length=1, max_length=120)
+    label: str = Field(default="", max_length=120)
     agent_id: str = Field(min_length=1, max_length=80)
     minutes: int = Field(ge=1, le=120)
     job_focus: str = Field(default="", max_length=500)
@@ -357,7 +357,7 @@ def install_routes(app: FastAPI):
         if not agent["enabled"]:
             raise HTTPException(422, "Choose an enabled agent category")
         with db() as c:
-            profile = c.execute("SELECT content FROM business_profile WHERE id=1").fetchone()
+            profile = c.execute("SELECT domain,content FROM business_profile WHERE id=1").fetchone()
             if not profile:
                 raise HTTPException(422, "Import and save the business website first")
             token = secrets.token_urlsafe(24)
@@ -369,7 +369,7 @@ def install_routes(app: FastAPI):
                 (
                     link_id,
                     hashlib.sha256(token.encode()).hexdigest(),
-                    body.label.strip(),
+                    body.label.strip() or profile["domain"].split("//", 1)[-1].split("/", 1)[0],
                     body.agent_id,
                     profile["content"],
                     body.minutes * 60,
