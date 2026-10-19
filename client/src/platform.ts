@@ -39,22 +39,20 @@ export function mountPlatform(endCall: () => Promise<void>) {
   hero.append(callView);
   const copy = hero.querySelector<HTMLElement>('.hero-copy')!;
   const art = hero.querySelector<HTMLElement>('.hero-art')!;
-  const launcher = hero.querySelector<HTMLElement>('.agent-launcher')!;
   const back = callView.querySelector<HTMLButtonElement>('.hero-back')!;
-  const reveal = () => {
+  const reveal = (agentName?: string) => {
     copy.hidden = true;
     art.hidden = true;
     consolePanel.hidden = false;
     callView.hidden = false;
     hero.classList.add('in-call');
-    consolePanel.querySelector('.controls')!.prepend(connect);
     const picker = document.querySelector<HTMLSelectElement>('#demo-agent')!;
     const heading = callView.querySelector('h2')!;
-    heading.textContent = picker.selectedOptions[0]?.textContent || 'Voice agent demo';
+    heading.textContent = agentName || picker.selectedOptions[0]?.textContent || 'Voice agent demo';
     callView.querySelector<HTMLElement>('[data-call-use]')!.textContent = heading.textContent;
     heading.focus({preventScroll:true});
   };
-  connect.addEventListener('click',reveal);
+  window.addEventListener('voice-call-starting',event=>reveal((event as CustomEvent<{agentName?:string}>).detail?.agentName));
   back.addEventListener('click',async()=>{
     back.disabled=true;
     back.textContent='Ending call…';
@@ -64,7 +62,6 @@ export function mountPlatform(endCall: () => Promise<void>) {
       copy.hidden=false;
       art.hidden=false;
       hero.classList.remove('in-call');
-      launcher.append(connect);
       document.querySelector<HTMLSelectElement>('#demo-agent')!.focus({preventScroll:true});
     } finally {
       back.disabled=false;
