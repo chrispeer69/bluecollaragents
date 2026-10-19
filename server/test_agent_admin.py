@@ -63,7 +63,7 @@ def test_catalog_hides_scripts(client):
 
 def test_scheduling_uses_nearest_upcoming_date(client):
     scheduling = get_agent("scheduling")
-    assert scheduling["version"] == 3
+    assert scheduling["version"] == 4
     assert "ask which year" in scheduling["prompt"]
     assert "nearest sensible upcoming date" in scheduling["prompt"]
 
@@ -173,7 +173,8 @@ def test_scripts_are_distinct_and_role_based(client):
     assert all(
         "Emily" not in a["greeting"]
         and "demo" in a["greeting"].lower()
-        and a["greeting"].endswith("Sound good?")
+        and "sound good" not in a["greeting"].lower()
+        and a["greeting"].endswith("?")
         for a in agents
     )
 
