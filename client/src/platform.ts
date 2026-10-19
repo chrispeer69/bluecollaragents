@@ -6,7 +6,7 @@ export function mountPlatform(endCall: () => Promise<void>) {
   const header = shell.querySelector<HTMLElement>('.topbar')!;
   const banner = document.createElement('div');
   banner.className = 'platform-banner';
-  banner.innerHTML = privateTrial ? 'Private voice agent trial' : 'Meet your next voice agent. <a href="#agent-demo">Try a live demo <span aria-hidden="true">↗</span></a>';
+  banner.innerHTML = privateTrial ? 'Private voice agent trial' : 'See how voice AI handles calls from first hello to next step. <a href="#how-it-works">Get started <span aria-hidden="true">↓</span></a>';
   header.before(banner);
   const nav = document.createElement('nav');
   nav.className = 'platform-nav';
@@ -22,7 +22,7 @@ export function mountPlatform(endCall: () => Promise<void>) {
 
   const hero = shell.querySelector<HTMLElement>('.hero')!;
   hero.id = 'agent-demo';
-  hero.innerHTML = `<div class="hero-copy"><p class="eyebrow">AI RECEPTIONISTS FOR SERVICE BUSINESSES</p><h1>Turn more calls<br>into <em>booked jobs.</em></h1><p class="lede">Your AI agent answers every call, qualifies the customer, and books the next step—while your team stays focused on the work.</p><div class="hero-links"><a href="#agent-picker" class="hero-primary">Try a live demo <span>↗</span></a><a href="./contact-sales.html" class="hero-secondary">Book a consultation</a></div><div id="agent-picker" class="agent-launcher"><label class="sr-only" for="demo-agent">Choose a demo agent</label><select id="demo-agent" disabled><option>Loading agents…</option></select></div><p class="mic-note">Choose an agent and experience a real conversation</p></div><div class="hero-art" aria-hidden="true"><div class="spectrum-aura"></div><div class="spectrum-blob"><div class="spectrum-sheen"></div></div><div class="spectrum-orbit"></div></div>`;
+  hero.innerHTML = `<div class="hero-copy"><p class="eyebrow">AI RECEPTIONISTS FOR SERVICE BUSINESSES</p><h1>Turn more calls<br>into <em>booked jobs.</em></h1><p class="lede">Your AI agent answers every call, qualifies the customer, and books the next step—while your team stays focused on the work.</p><div class="hero-links"><a href="#how-it-works" class="hero-primary">Get started <span>↓</span></a><a href="./contact-sales.html" class="hero-secondary">Book a consultation</a></div><div id="agent-picker" class="agent-launcher"><label class="sr-only" for="demo-agent">Choose a demo agent</label><select id="demo-agent" disabled><option>Loading agents…</option></select></div><p class="mic-note">Choose an agent and experience a real conversation</p></div><div class="hero-art" aria-hidden="true"><div class="spectrum-aura"></div><div class="spectrum-blob"><div class="spectrum-sheen"></div></div><div class="spectrum-orbit"></div></div>`;
   const connect = document.querySelector<HTMLButtonElement>('#connect')!;
   connect.querySelector('span')!.textContent='Start call';
   const nativePicker = hero.querySelector<HTMLSelectElement>('#demo-agent')!;
@@ -106,8 +106,8 @@ export function mountPlatform(endCall: () => Promise<void>) {
     event.preventDefault();
     if(!connect.disabled) connect.click();
   });
-  header.querySelector('.header-actions>a')!.setAttribute('href','#agent-demo');
-  header.querySelector('.header-actions>a')!.textContent='Try an agent';
+  header.querySelector('.header-actions>a')!.setAttribute('href','#how-it-works');
+  header.querySelector('.header-actions>a')!.textContent='Get started';
   if(privateTrial) (header.querySelector('.header-actions>a') as HTMLElement).hidden=true;
 
   const info = document.createElement('section');
