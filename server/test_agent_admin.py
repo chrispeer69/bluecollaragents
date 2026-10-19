@@ -173,7 +173,6 @@ def test_scripts_are_distinct_and_role_based(client):
     assert all(
         "Emily" not in a["greeting"]
         and "demo" in a["greeting"].lower()
-        and "sound good" not in a["greeting"].lower()
         and a["greeting"].endswith("?")
         for a in agents
     )
@@ -302,6 +301,9 @@ def test_private_scheduling_greeting_uses_business_services():
         opening = private_demo_greeting(mode, "Example Plumbing", "Business facts")
         assert "Example Plumbing" in opening
         assert "Blue Collar Agents" not in opening
+    leads = private_demo_greeting("leads", "Example Plumbing", "Business facts")
+    assert "real qualifier" in leads
+    assert "walk you through it?" in leads
 
 
 def test_one_active_and_cooldown_are_shared_across_agents(client, monkeypatch):

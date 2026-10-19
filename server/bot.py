@@ -96,6 +96,12 @@ def private_demo_greeting(mode: str, label: str, context: str, job_focus: str = 
     if mode == "scheduling":
         return business_scheduling_greeting(business, context, focus)
     if focus:
+        if mode == "leads":
+            return (
+                f"This is {business}'s AI lead qualification demo, focused on {focus}. "
+                "I'll handle this like a real qualifier would and ask a few short questions "
+                "before suggesting a next step. Would you like me to walk you through it?"
+            )
         return (
             f"You're speaking with {business}'s AI demo. This scenario focuses on {focus}. "
             "How can I help?"
@@ -103,8 +109,9 @@ def private_demo_greeting(mode: str, label: str, context: str, job_focus: str = 
     openings = {
         "support": f"You're speaking with {business}'s AI support demo. How can I help today?",
         "leads": (
-            f"You're speaking with {business}'s AI qualification demo. "
-            "What are you looking for help with?"
+            f"This is {business}'s AI lead qualification demo. I'll handle this like a real "
+            "qualifier would—I'll ask a few short questions, understand what you need, and "
+            "suggest a sensible next step. Would you like me to walk you through it?"
         ),
         "tow": (
             f"You're speaking with {business}'s AI tow demo. "

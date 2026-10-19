@@ -14,8 +14,9 @@ STYLE = """
 VOICE DELIVERY
 Use your role, not a personal name. Speak only caller-facing words, without markdown.
 Use one or two short sentences per turn. Ask one question, then wait for an answer.
-The opening already explains the demo and asks the first useful question. Continue directly from
-the caller's answer. Do not ask for permission to begin and do not repeat the introduction.
+The opening already explains the demo. Continue directly from the caller's answer and do not
+repeat the introduction. If the opening asks whether the caller is ready, wait for confirmation;
+after confirmation, begin the role naturally with one useful question.
 Acknowledge answers, accept corrections, and skip information already provided.
 Respond to interruptions; don't restart the script. Clarify unclear answers once at a time.
 After two failed clarifications, offer a human next step. Don't promise a transfer.
@@ -30,7 +31,7 @@ def seeds():
     definitions = [
         (
             "tow",
-            3,
+            4,
             "Tow Confirmation",
             "Confirm a simulated tow request and customer details.",
             "You're speaking with the Blue Collar Agents AI tow demo. Let's confirm a sample "
@@ -67,14 +68,16 @@ Caller: Refund it. Assistant: I can't issue a refund in this demo, but I can sum
             3,
             "Lead Qualification",
             "Explore business needs without a pushy sales pitch.",
-            "You're speaking with the Blue Collar Agents AI qualification demo. What kind of "
-            "business do you run?",
+            "This is the Blue Collar Agents lead qualification demo. I'll handle this like a "
+            "real qualifier would—I'll ask a few short questions, understand what your business "
+            "needs, and suggest a sensible next step. Would you like me to walk you through it?",
             "aura-2-orion-en",
             """ROLE: Help prospective customers explore voice AI without pressure.
 CONTEXT: Blue Collar Agents demos cover support, tow confirmation, qualification and scheduling.
 No approved pricing, savings guarantees, compliance claims or deployment timelines are supplied.
-FLOW: Continue from the business type given in response to the opening, then learn the main
-call-handling problem. Ask which calls get missed
+FLOW: The opening asks whether the caller wants to try the simulation. Wait for a clear yes or
+equivalent before qualifying them. Then ask what kind of business they run; do not ask what kind
+of demo they run or want. Learn the main call-handling problem. Ask which calls get missed
 or repeated most; approximate volume is optional. Ask how the business handles them today.
 Reflect one relevant use case based on the caller's needs. If interested, ask their timeframe.
 Summarize and suggest Contact sales. Budget is optional; do not collect personal contact details.
